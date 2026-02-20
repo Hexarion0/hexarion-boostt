@@ -66,13 +66,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const skillsBlock = document.getElementById('skills-block');
 
   async function initializeVisitorCounter() {
+    const viewElement = document.getElementById('visitor-count');
+    const hasViewed = localStorage.getItem('v_done_jaqliv_v2');
+    
+    // Fallback: Time-based counter (Always works, looks global)
+    const startDate = new Date('2026-02-20T15:20:00Z').getTime();
+    const calculateFakeViews = () => {
+      const elapsed = Math.floor((Date.now() - startDate) / 1000);
+      return Math.floor(elapsed / 120); // +1 every 2 mins
+    };
+
     try {
-      const response = await fetch(`https://api.countapi.xyz/hit/hexarion_final_v5/visits`);
+      // Trying a more stable API
+      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_jaqliv_v2/hits/increment`);
       const data = await response.json();
-      if (data && data.value) visitorCount.textContent = data.value.toLocaleString();
+      if (data && data.count) {
+        viewElement.textContent = data.count.toLocaleString();
+      } else {
+        viewElement.textContent = calculateFakeViews().toLocaleString();
+      }
     } catch (err) {
-      const startDate = new Date('2026-02-20T15:20:00Z').getTime();
-      visitorCount.textContent = Math.max(1, Math.floor((Date.now() - startDate) / 60000)).toLocaleString();
+      viewElement.textContent = calculateFakeViews().toLocaleString();
     }
   }
 
