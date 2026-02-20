@@ -117,16 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function initializeVisitorCounter() {
-  async function initializeVisitorCounter() {
-    const namespace = 'hexarion_jaqliv_v1';
+    const namespace = 'hexarion_jaqliv_final';
     const key = 'visits';
-    const hasViewed = localStorage.getItem('has_viewed_jaqliv');
+    const hasViewed = localStorage.getItem('has_viewed_jaqliv_final');
     
     try {
       let url = `https://api.counterapi.dev/v1/${namespace}/${key}`;
       if (!hasViewed) {
         url += '/increment';
-        localStorage.setItem('has_viewed_jaqliv', 'true');
+        localStorage.setItem('has_viewed_jaqliv_final', 'true');
       }
 
       const response = await fetch(url);
