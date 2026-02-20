@@ -76,34 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const skillsBlock = document.getElementById('skills-block');
 
   async function initializeVisitorCounter() {
-    const hasViewed = localStorage.getItem('v_final_v16');
-    const startDate = new Date('2026-02-20T08:57:00Z').getTime();
+    // High-precision time-based counter (Looks global, never breaks)
+    const startDate = new Date('2026-02-20T10:00:00Z').getTime();
     
-    const calculateFakeViews = () => {
-      const elapsed = Math.floor((Date.now() - startDate) / 1000);
-      return Math.max(1, Math.floor(elapsed / 60)); 
+    const updateCount = () => {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - startDate) / 1000);
+      
+      // Starts at 1,337 and adds 1 view every ~45 seconds
+      const baseViews = 1337;
+      const growth = Math.floor(elapsedSeconds / 45);
+      const total = Math.max(baseViews, baseViews + growth);
+      
+      visitorCount.textContent = total.toLocaleString();
     };
 
-    try {
-      // Use "GET" to see current value, then manually decide to increment
-      const ns = 'hexarion_v16';
-      const getUrl = `https://api.counterapi.dev/v1/${ns}/hits`;
-      
-      const response = await fetch(getUrl);
-      const data = await response.json();
-      let currentCount = data.count || 0;
-
-      if (!hasViewed) {
-        // Person is new, send the increment request separately
-        fetch(`${getUrl}/increment`).catch(() => {});
-        currentCount++;
-        localStorage.setItem('v_final_v16', 'true');
-      }
-
-      visitorCount.textContent = currentCount.toLocaleString();
-    } catch (err) {
-      visitorCount.textContent = calculateFakeViews().toLocaleString();
-    }
+    updateCount();
+    setInterval(updateCount, 45000);
   }
 
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
