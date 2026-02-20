@@ -117,13 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function initializeVisitorCounter() {
-    const hasViewed = localStorage.getItem('v_jaqliv_final');
-    let count = parseInt(localStorage.getItem('v_count_local') || '142');
+    // New keys to force a reset for all users
+    const hasViewed = localStorage.getItem('v_count_v2_status');
+    let count = parseInt(localStorage.getItem('v_count_v2_val') || '0');
 
     if (!hasViewed) {
       count++;
-      localStorage.setItem('v_count_local', count);
-      localStorage.setItem('v_jaqliv_final', 'true');
+      localStorage.setItem('v_count_v2_val', count);
+      localStorage.setItem('v_count_v2_status', 'true');
     }
 
     // Display formatted count
