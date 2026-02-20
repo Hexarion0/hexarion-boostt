@@ -116,23 +116,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 500);
 
 
-  function initializeVisitorCounter() {
-    let totalVisitors = localStorage.getItem('totalVisitorCount');
-    if (!totalVisitors) {
-      totalVisitors = 921234;
-      localStorage.setItem('totalVisitorCount', totalVisitors);
-    } else {
-      totalVisitors = parseInt(totalVisitors);
-    }
+  async function initializeVisitorCounter() {
+    const namespace = 'hexarion_global_v1';
+    const key = 'visits';
+    const hasViewed = localStorage.getItem('has_viewed_global');
+    
+    try {
+      // Use the same reliable counter logic from before
+      let url = `https://api.counterapi.dev/v1/${namespace}/${key}`;
+      if (!hasViewed) {
+        url += '/increment';
+        localStorage.setItem('has_viewed_global', 'true');
+      }
 
-    const hasVisited = localStorage.getItem('hasVisited');
-    if (!hasVisited) {
-      totalVisitors++;
-      localStorage.setItem('totalVisitorCount', totalVisitors);
-      localStorage.setItem('hasVisited', 'true');
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data && data.count) {
+        visitorCount.textContent = data.count.toLocaleString();
+      } else {
+        visitorCount.textContent = '1,337+';
+      }
+    } catch (err) {
+      visitorCount.textContent = '1,337+';
     }
-
-    visitorCount.textContent = totalVisitors.toLocaleString();
   }
 
 
