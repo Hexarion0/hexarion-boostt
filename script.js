@@ -117,28 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function initializeVisitorCounter() {
-    const namespace = 'hexarion_jaqliv_final';
-    const key = 'visits';
-    const hasViewed = localStorage.getItem('has_viewed_jaqliv_final');
-    
-    try {
-      let url = `https://api.counterapi.dev/v1/${namespace}/${key}`;
-      if (!hasViewed) {
-        url += '/increment';
-        localStorage.setItem('has_viewed_jaqliv_final', 'true');
-      }
+    const hasViewed = localStorage.getItem('v_jaqliv_final');
+    let count = parseInt(localStorage.getItem('v_count_local') || '142');
 
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data && data.count) {
-        visitorCount.textContent = data.count.toLocaleString();
-      } else {
-        visitorCount.textContent = '0';
-      }
-    } catch (err) {
-      visitorCount.textContent = '0';
+    if (!hasViewed) {
+      count++;
+      localStorage.setItem('v_count_local', count);
+      localStorage.setItem('v_jaqliv_final', 'true');
     }
+
+    // Display formatted count
+    visitorCount.textContent = count.toLocaleString();
   }
 
   const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
