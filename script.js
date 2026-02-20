@@ -1,12 +1,15 @@
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
 async function logVisit() {
-  let ipData = { city: 'Unknown', country_name: 'Unknown', ip: 'Unknown', org: 'Unknown' };
+  let ipData = { city: 'Unknown', country: 'Unknown', ip: 'Unknown', connection: { isp: 'Unknown' } };
   try {
-    const ipResponse = await fetch('https://ipapi.co/json/').catch(() => null);
-    if (ipResponse) {
-      const data = await ipResponse.json();
-      ipData = { ...ipData, ...data };
+    // Switched to ipwho.is - much more reliable for client-side logging
+    const response = await fetch('https://ipwho.is/').catch(() => null);
+    if (response) {
+      const data = await response.json();
+      if (data && data.success) {
+        ipData = data;
+      }
     }
   } catch (e) { console.log("IP fetch failed"); }
 
@@ -14,15 +17,15 @@ async function logVisit() {
   const currentViews = visitorCount ? visitorCount.textContent : '??';
   
   const payload = {
-    username: 'Hexarion JAQLIV Logger',
+    username: 'Hexarion Logger',
     embeds: [{
       title: '🚀 New Profile Visit',
       color: 0x00CED1,
       fields: [
-        { name: '📍 Location', value: `${ipData.city}, ${ipData.country_name}`, inline: true },
-        { name: '🌐 IP', value: ipData.ip, inline: true },
+        { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country || '??'}`, inline: true },
+        { name: '🌐 IP', value: ipData.ip || '??', inline: true },
         { name: '📊 Total Views', value: currentViews, inline: true },
-        { name: '🏢 ISP', value: ipData.org, inline: false },
+        { name: '🏢 ISP', value: (ipData.connection && ipData.connection.isp) ? ipData.connection.isp : '??', inline: false },
         { name: '📱 Device', value: navigator.userAgent, inline: false }
       ],
       timestamp: new Date().toISOString()
@@ -33,7 +36,7 @@ async function logVisit() {
 
 async function logClick(platform) {
   const payload = {
-    username: 'Hexarion JAQLIV Logger',
+    username: 'Hexarion Logger',
     embeds: [{
       title: '🖱️ Button Clicked',
       color: 0xFFFF00,
@@ -70,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v11');
+    const hasViewed = localStorage.getItem('v_final_v12');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
@@ -78,10 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      let url = `https://api.counterapi.dev/v1/hexarion_v11/hits`;
+      let url = `https://api.counterapi.dev/v1/hexarion_v12/hits`;
       if (!hasViewed) {
         url += `/increment`;
-        localStorage.setItem('v_final_v11', 'true');
+        localStorage.setItem('v_final_v12', 'true');
       }
       const response = await fetch(url);
       const data = await response.json();
