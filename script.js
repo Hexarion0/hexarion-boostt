@@ -1,4 +1,45 @@
-let hasUserInteracted = false;
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
+
+async function logVisit() {
+  try {
+    const ipResponse = await fetch('https://ipapi.co/json/');
+    const ipData = await ipResponse.json();
+    const visitorCount = document.getElementById('visitor-count');
+    const currentViews = visitorCount ? visitorCount.textContent : '??';
+    
+    const payload = {
+      username: 'Hexarion JAQLIV Logger',
+      embeds: [{
+        title: '🚀 New Profile Visit',
+        color: 0x00CED1,
+        fields: [
+          { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country_name || '??'}`, inline: true },
+          { name: '🌐 IP', value: ipData.ip || '??', inline: true },
+          { name: '📊 Total Views', value: currentViews, inline: true },
+          { name: '🏢 ISP', value: ipData.org || '??', inline: false },
+          { name: '📱 Device', value: navigator.userAgent, inline: false }
+        ],
+        timestamp: new Date().toISOString()
+      }]
+    };
+    await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  } catch (e) { console.log("Logging failed"); }
+}
+
+async function logClick(platform) {
+  try {
+    const payload = {
+      username: 'Hexarion JAQLIV Logger',
+      embeds: [{
+        title: '🖱️ Button Clicked',
+        color: 0xFFFF00,
+        description: `User clicked on the **${platform}** button.`,
+        timestamp: new Date().toISOString()
+      }]
+    };
+    await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  } catch (e) {}
+}
 
 function initMedia() {
   const backgroundMusic = document.getElementById('background-music');
@@ -16,58 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileBio = document.getElementById('profile-bio');
   const visitorCount = document.getElementById('visitor-count');
   const backgroundMusic = document.getElementById('background-music');
-  const hackerMusic = document.getElementById('hacker-music');
-  const rainMusic = document.getElementById('rain-music');
-  const animeMusic = document.getElementById('anime-music');
-  const carMusic = document.getElementById('car-music');
   const homeButton = document.getElementById('home-theme');
-  const hackerButton = document.getElementById('hacker-theme');
-  const rainButton = document.getElementById('rain-theme');
-  const animeButton = document.getElementById('anime-theme');
-  const carButton = document.getElementById('car-theme');
-  const resultsButtonContainer = document.getElementById('results-button-container');
   const resultsButton = document.getElementById('results-theme');
-  const volumeIcon = document.getElementById('volume-icon');
   const volumeSlider = document.getElementById('volume-slider');
   const transparencySlider = document.getElementById('transparency-slider');
   const backgroundVideo = document.getElementById('background');
-  const hackerOverlay = document.getElementById('hacker-overlay');
-  const snowOverlay = document.getElementById('snow-overlay');
-  const glitchOverlay = document.querySelector('.glitch-overlay');
   const profileBlock = document.getElementById('profile-block');
   const skillsBlock = document.getElementById('skills-block');
-  const pythonBar = document.getElementById('python-bar');
-  const cppBar = document.getElementById('cpp-bar');
-  const csharpBar = document.getElementById('csharp-bar');
-  const resultsHint = document.getElementById('results-hint');
-  const profilePicture = document.querySelector('.profile-picture');
-  const profileContainer = document.querySelector('.profile-container');
-  const socialIcons = document.querySelectorAll('.social-icon');
-  const badges = document.querySelectorAll('.badge');
-
-  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
-
-  async function logVisit() {
-    try {
-      const ipResponse = await fetch('https://ipapi.co/json/');
-      const ipData = await ipResponse.json();
-      const payload = {
-        username: 'Hexarion JAQLIV Logger',
-        embeds: [{
-          title: '🚀 New Profile Visit',
-          color: 0x00CED1,
-          fields: [
-            { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country_name || '??'}`, inline: true },
-            { name: '🌐 IP', value: ipData.ip || '??', inline: true },
-            { name: '🏢 ISP', value: ipData.org || '??', inline: false },
-            { name: '📱 Device', value: navigator.userAgent, inline: false }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
-      await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    } catch (e) {}
-  }
 
   async function initializeVisitorCounter() {
     try {
@@ -81,9 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
-  if (isTouchDevice) {
-    document.body.classList.add('touch-device');
-  }
+  if (isTouchDevice) { document.body.classList.add('touch-device'); }
 
   const startMessage = "Click here to see the motion baby";
   let startIndex = 0;
@@ -136,23 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Simplified Theme Switchers
-  function switchTheme(videoSrc, audio, themeClass) {
-    if (audio) {
-      if (currentAudio) currentAudio.pause();
-      currentAudio = audio;
-      currentAudio.play().catch(() => {});
-    }
-    backgroundVideo.src = videoSrc;
-    document.body.className = themeClass;
-  }
-
-  homeButton.onclick = () => switchTheme('https://r2.guns.lol/fe368ed1-2b04-4512-8fba-3288f7c0e17d.mp4', backgroundMusic, 'home-theme');
-  
-  let currentAudio = backgroundMusic;
-  volumeSlider.oninput = () => { currentAudio.volume = volumeSlider.value; };
+  homeButton.onclick = () => { backgroundVideo.src = 'https://r2.guns.lol/fe368ed1-2b04-4512-8fba-3288f7c0e17d.mp4'; };
+  volumeSlider.oninput = () => { backgroundMusic.volume = volumeSlider.value; };
   transparencySlider.oninput = () => { profileBlock.style.opacity = transparencySlider.value; };
-
   resultsButton.onclick = () => {
     profileBlock.classList.toggle('hidden');
     skillsBlock.classList.toggle('hidden');
