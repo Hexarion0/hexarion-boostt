@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     handleStart();
   });
 
-  const name = "Hexarion";
+  const name = "Hexarion Aゆ";
   let nameIndex = 0;
   function typeWriterName() {
     if (nameIndex < name.length) {
