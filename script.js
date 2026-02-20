@@ -2,9 +2,7 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oC
 
 async function logVisit() {
   let ipData = { city: 'Unknown', country_name: 'Unknown', ip: 'Unknown', org: 'Unknown' };
-  
   try {
-    // Using ipapi.co with HTTPS (standard for browser fetches)
     const response = await fetch('https://ipapi.co/json/').catch(() => null);
     if (response) {
       const data = await response.json();
@@ -12,11 +10,11 @@ async function logVisit() {
     }
   } catch (e) { console.log("Logger failed"); }
 
-  const viewElement = document.getElementById('visitor-count');
-  const currentViews = viewElement ? viewElement.textContent : '??';
+  const visitorCount = document.getElementById('visitor-count');
+  const currentViews = visitorCount ? visitorCount.textContent : '??';
   
   const payload = {
-    username: 'Hexarion Logger',
+    username: 'Hexarion JAQLIV Logger',
     embeds: [{
       title: '🚀 New Profile Visit',
       color: 0x00CED1,
@@ -30,17 +28,12 @@ async function logVisit() {
       timestamp: new Date().toISOString()
     }]
   };
-
-  fetch(WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(() => {});
+  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 async function logClick(platform) {
   const payload = {
-    username: 'Hexarion Logger',
+    username: 'Hexarion JAQLIV Logger',
     embeds: [{
       title: '🖱️ Button Clicked',
       color: 0xFFFF00,
@@ -67,23 +60,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileBio = document.getElementById('profile-bio');
   const visitorCount = document.getElementById('visitor-count');
   const backgroundMusic = document.getElementById('background-music');
-  const homeButton = document.getElementById('home-theme');
-  const resultsButton = document.getElementById('results-theme');
   const volumeSlider = document.getElementById('volume-slider');
   const transparencySlider = document.getElementById('transparency-slider');
   const backgroundVideo = document.getElementById('background');
   const profileBlock = document.getElementById('profile-block');
   const skillsBlock = document.getElementById('skills-block');
+  const resultsButton = document.getElementById('results-theme');
 
   const updateCount = () => {
-    // High-precision time-based counter (Un-dupable)
-    // Start time: Today 17:00 GMT+7 (10:00 UTC)
     const startDate = new Date('2026-02-20T10:00:00Z').getTime();
     const now = Date.now();
     const elapsed = Math.max(0, Math.floor((now - startDate) / 1000));
-    
-    // Base: 1,337
-    // Growth: +1 view every 120 seconds
     const total = 1337 + Math.floor(elapsed / 120);
     visitorCount.textContent = total.toLocaleString();
   };
@@ -91,16 +78,22 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCount();
   setInterval(updateCount, 10000);
 
+  const startMessage = "click to enter";
+  let startIndex = 0;
+  function typeWriterStart() {
+    if (startIndex < startMessage.length) {
+      startText.textContent = startMessage.slice(0, startIndex + 1) + '|';
+      startIndex++;
+      setTimeout(typeWriterStart, 100);
+    }
+  }
+  typeWriterStart();
+
   const handleStart = () => {
     if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
-    
-    // 1. Ensure counter is showing before logging
     updateCount();
-    
-    // 2. Log visit
     logVisit();
-
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
     profileBlock.classList.remove('hidden');
@@ -142,10 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Theme logic removed
-  volumeSlider.oninput = () => { backgroundMusic.volume = volumeSlider.value; };
-  transparencySlider.oninput = () => { profileBlock.style.opacity = transparencySlider.value; };
-  resultsButton.onclick = () => {
+  if (volumeSlider) volumeSlider.oninput = () => { backgroundMusic.volume = volumeSlider.value; };
+  if (transparencySlider) transparencySlider.oninput = () => { profileBlock.style.opacity = transparencySlider.value; };
+  if (resultsButton) resultsButton.onclick = () => {
     profileBlock.classList.toggle('hidden');
     skillsBlock.classList.toggle('hidden');
   };
