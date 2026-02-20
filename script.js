@@ -1,44 +1,55 @@
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
 async function logVisit() {
+  let ipData = { city: 'Unknown', country_name: 'Unknown', ip: 'Unknown', org: 'Unknown' };
+  
   try {
-    const ipResponse = await fetch('https://ipapi.co/json/');
-    const ipData = await ipResponse.json();
-    const visitorCount = document.getElementById('visitor-count');
-    const currentViews = visitorCount ? visitorCount.textContent : '??';
-    
-    const payload = {
-      username: 'Hexarion JAQLIV Logger',
-      embeds: [{
-        title: '🚀 New Profile Visit',
-        color: 0x00CED1,
-        fields: [
-          { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country_name || '??'}`, inline: true },
-          { name: '🌐 IP', value: ipData.ip || '??', inline: true },
-          { name: '📊 Total Views', value: currentViews, inline: true },
-          { name: '🏢 ISP', value: ipData.org || '??', inline: false },
-          { name: '📱 Device', value: navigator.userAgent, inline: false }
-        ],
-        timestamp: new Date().toISOString()
-      }]
-    };
-    await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  } catch (e) { console.log("Logging failed"); }
+    // Try to get IP info, but don't stop if it fails
+    const ipResponse = await fetch('https://ipapi.co/json/').catch(() => null);
+    if (ipResponse) {
+      const data = await ipResponse.json();
+      ipData = { ...ipData, ...data };
+    }
+  } catch (e) { console.log("IP fetch failed"); }
+
+  const visitorCount = document.getElementById('visitor-count');
+  const currentViews = visitorCount ? visitorCount.textContent : '??';
+  
+  const payload = {
+    username: 'Hexarion JAQLIV Logger',
+    embeds: [{
+      title: '🚀 New Profile Visit',
+      color: 0x00CED1,
+      fields: [
+        { name: '📍 Location', value: `${ipData.city}, ${ipData.country_name}`, inline: true },
+        { name: '🌐 IP', value: ipData.ip, inline: true },
+        { name: '📊 Total Views', value: currentViews, inline: true },
+        { name: '🏢 ISP', value: ipData.org, inline: false },
+        { name: '📱 Device', value: navigator.userAgent, inline: false }
+      ],
+      timestamp: new Date().toISOString()
+    }]
+  };
+
+  // Always attempt the webhook send
+  fetch(WEBHOOK_URL, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify(payload) 
+  }).catch(err => console.error("Webhook failed:", err));
 }
 
 async function logClick(platform) {
-  try {
-    const payload = {
-      username: 'Hexarion JAQLIV Logger',
-      embeds: [{
-        title: '🖱️ Button Clicked',
-        color: 0xFFFF00,
-        description: `User clicked on the **${platform}** button.`,
-        timestamp: new Date().toISOString()
-      }]
-    };
-    await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  } catch (e) {}
+  const payload = {
+    username: 'Hexarion JAQLIV Logger',
+    embeds: [{
+      title: '🖱️ Button Clicked',
+      color: 0xFFFF00,
+      description: `User clicked on the **${platform}** button.`,
+      timestamp: new Date().toISOString()
+    }]
+  };
+  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 function initMedia() {
@@ -68,16 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
     const hasViewed = localStorage.getItem('v_done_jaqliv_v2');
-    
-    // Fallback: Time-based counter (Always works, looks global)
     const startDate = new Date('2026-02-20T15:20:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
-      return Math.floor(elapsed / 120); // +1 every 2 mins
+      return Math.floor(elapsed / 120);
     };
 
     try {
-      // Trying a more stable API
       const response = await fetch(`https://api.counterapi.dev/v1/hexarion_jaqliv_v2/hits/increment`);
       const data = await response.json();
       if (data && data.count) {
@@ -106,9 +114,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeVisitorCounter();
   typeWriterStart();
 
+  // Desktop Click
   startScreen.addEventListener('click', () => {
     startScreen.classList.add('hidden');
-    logVisit();
+    logVisit(); // Webhook call
+    backgroundMusic.muted = false;
+    backgroundMusic.play().catch(() => {});
+    profileBlock.classList.remove('hidden');
+    gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
+    typeWriterName();
+    typeWriterBio();
+  });
+
+  // Mobile Touch
+  startScreen.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startScreen.classList.add('hidden');
+    logVisit(); // Webhook call
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
     profileBlock.classList.remove('hidden');
