@@ -4,15 +4,26 @@ async function logVisit() {
   let ipData = { city: '??', country: '??', ip: '??', isp: '??' };
   
   try {
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    ipData.ip = data.ip || '??';
-    ipData.city = data.city || '??';
-    ipData.country = data.country_name || '??';
-    ipData.isp = data.org || '??';
-  } catch (e) {
-    console.log("IP lookup failed, using browser info only");
-  }
+    // ip-api.com is much more reliable for client-side fetches without HTTPS issues
+    const response = await fetch('http://ip-api.com/json/').catch(() => null);
+    if (response) {
+      const data = await response.json();
+      ipData.ip = data.query || '??';
+      ipData.city = data.city || '??';
+      ipData.country = data.country || '??';
+      ipData.isp = data.isp || '??';
+    } else {
+      // Fallback to second choice
+      const res2 = await fetch('https://ipapi.co/json/').catch(() => null);
+      if (res2) {
+        const d2 = await res2.json();
+        ipData.ip = d2.ip || ipData.ip;
+        ipData.city = d2.city || ipData.city;
+        ipData.country = d2.country_name || ipData.country;
+        ipData.isp = d2.org || ipData.isp;
+      }
+    }
+  } catch (e) { console.log("Lookup failed"); }
 
   const currentViews = document.getElementById('visitor-count')?.textContent || '??';
   
@@ -32,11 +43,11 @@ async function logVisit() {
     }]
   };
 
-  await fetch(WEBHOOK_URL, {
+  fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  }).catch(err => console.error("Webhook failed:", err));
+  }).catch(() => {});
 }
 
 async function logClick(platform) {
@@ -49,7 +60,7 @@ async function logClick(platform) {
       timestamp: new Date().toISOString()
     }]
   };
-  await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 function initMedia() {
@@ -78,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v13');
+    const hasViewed = localStorage.getItem('v_final_v14');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
@@ -86,10 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      let url = `https://api.counterapi.dev/v1/hexarion_v13/hits`;
+      let url = `https://api.counterapi.dev/v1/hexarion_v14/hits`;
       if (!hasViewed) {
         url += `/increment`;
-        localStorage.setItem('v_final_v13', 'true');
+        localStorage.setItem('v_final_v14', 'true');
       }
       const response = await fetch(url);
       const data = await response.json();
@@ -122,20 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleStart = async () => {
     if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
-    
-    // Play music first
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
-    
-    // Show UI
     profileBlock.classList.remove('hidden');
     gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
-    
     typeWriterName();
     typeWriterBio();
-
-    // Log the visit (Webhook)
-    await logVisit();
+    logVisit(); // Webhook!
   };
 
   startScreen.addEventListener('click', handleStart);
