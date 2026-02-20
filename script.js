@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  homeButton.onclick = () => { backgroundVideo.src = 'https://r2.guns.lol/fe368ed1-2b04-4512-8fba-3288f7c0e17d.mp4'; };
+  // Theme logic removed
   volumeSlider.oninput = () => { backgroundMusic.volume = volumeSlider.value; };
   transparencySlider.oninput = () => { profileBlock.style.opacity = transparencySlider.value; };
   resultsButton.onclick = () => {
