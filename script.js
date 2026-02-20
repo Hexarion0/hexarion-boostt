@@ -78,15 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_done_jaqliv_v2');
-    const startDate = new Date('2026-02-20T15:20:00Z').getTime();
+    const hasViewed = localStorage.getItem('v_done_res_v1');
+    const startDate = new Date('2026-02-20T15:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
       return Math.floor(elapsed / 120);
     };
 
     try {
-      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_jaqliv_v2/hits/increment`);
+      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_res_v1/hits/increment`);
       const data = await response.json();
       if (data && data.count) {
         viewElement.textContent = data.count.toLocaleString();
