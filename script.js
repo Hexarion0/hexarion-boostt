@@ -2,9 +2,7 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oC
 
 async function logVisit() {
   let ipData = { city: 'Unknown', country_name: 'Unknown', ip: 'Unknown', org: 'Unknown' };
-  
   try {
-    // Try to get IP info, but don't stop if it fails
     const ipResponse = await fetch('https://ipapi.co/json/').catch(() => null);
     if (ipResponse) {
       const data = await ipResponse.json();
@@ -30,13 +28,7 @@ async function logVisit() {
       timestamp: new Date().toISOString()
     }]
   };
-
-  // Always attempt the webhook send
-  fetch(WEBHOOK_URL, { 
-    method: 'POST', 
-    headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify(payload) 
-  }).catch(err => console.error("Webhook failed:", err));
+  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 async function logClick(platform) {
@@ -78,27 +70,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v10');
-    
-    // 15:57 GMT+7 is 08:57 UTC
+    const hasViewed = localStorage.getItem('v_final_v11');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
-      return Math.max(0, Math.floor(elapsed / 60)); // +1 per minute
+      return Math.max(0, Math.floor(elapsed / 60)); 
     };
 
     try {
-      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_v10/hits/increment`);
-      const data = await response.json();
-      if (data && data.count) {
-        viewElement.textContent = data.count.toLocaleString();
-      } else {
-        viewElement.textContent = calculateFakeViews().toLocaleString();
+      let url = `https://api.counterapi.dev/v1/hexarion_v11/hits`;
+      if (!hasViewed) {
+        url += `/increment`;
+        localStorage.setItem('v_final_v11', 'true');
       }
-    } catch (err) {
-      viewElement.textContent = calculateFakeViews().toLocaleString();
-    }
-  }
+      const response = await fetch(url);
       const data = await response.json();
       if (data && data.count) {
         viewElement.textContent = data.count.toLocaleString();
@@ -126,10 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeVisitorCounter();
   typeWriterStart();
 
-  // Desktop Click
   startScreen.addEventListener('click', () => {
     startScreen.classList.add('hidden');
-    logVisit(); // Webhook call
+    logVisit();
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
     profileBlock.classList.remove('hidden');
@@ -138,11 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     typeWriterBio();
   });
 
-  // Mobile Touch
   startScreen.addEventListener('touchstart', (e) => {
     e.preventDefault();
     startScreen.classList.add('hidden');
-    logVisit(); // Webhook call
+    logVisit();
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
     profileBlock.classList.remove('hidden');
