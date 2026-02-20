@@ -2,9 +2,7 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oC
 
 async function logVisit() {
   let ipData = { city: '??', country: '??', ip: '??', isp: '??' };
-  
   try {
-    // ip-api.com is much more reliable for client-side fetches without HTTPS issues
     const response = await fetch('http://ip-api.com/json/').catch(() => null);
     if (response) {
       const data = await response.json();
@@ -12,20 +10,10 @@ async function logVisit() {
       ipData.city = data.city || '??';
       ipData.country = data.country || '??';
       ipData.isp = data.isp || '??';
-    } else {
-      // Fallback to second choice
-      const res2 = await fetch('https://ipapi.co/json/').catch(() => null);
-      if (res2) {
-        const d2 = await res2.json();
-        ipData.ip = d2.ip || ipData.ip;
-        ipData.city = d2.city || ipData.city;
-        ipData.country = d2.country_name || ipData.country;
-        ipData.isp = d2.org || ipData.isp;
-      }
     }
   } catch (e) { console.log("Lookup failed"); }
 
-  const currentViews = document.getElementById('visitor-count')?.textContent || '??';
+  const visitorCount = document.getElementById('visitor-count')?.textContent || '??';
   
   const payload = {
     username: 'Hexarion Logger',
@@ -35,19 +23,14 @@ async function logVisit() {
       fields: [
         { name: '📍 Location', value: `${ipData.city}, ${ipData.country}`, inline: true },
         { name: '🌐 IP', value: ipData.ip, inline: true },
-        { name: '📊 Total Views', value: currentViews, inline: true },
+        { name: '📊 Total Views', value: visitorCount, inline: true },
         { name: '🏢 ISP', value: ipData.isp, inline: false },
         { name: '📱 Device', value: navigator.userAgent, inline: false }
       ],
       timestamp: new Date().toISOString()
     }]
   };
-
-  fetch(WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(() => {});
+  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 async function logClick(platform) {
@@ -72,7 +55,12 @@ function initMedia() {
   backgroundVideo.play().catch(() => {});
 }
 
+let counterInitialized = false;
+
 document.addEventListener('DOMContentLoaded', () => {
+  if (counterInitialized) return;
+  counterInitialized = true;
+
   const startScreen = document.getElementById('start-screen');
   const startText = document.getElementById('start-text');
   const profileName = document.getElementById('profile-name');
@@ -87,35 +75,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileBlock = document.getElementById('profile-block');
   const skillsBlock = document.getElementById('skills-block');
 
-  let counterStarted = false;
   async function initializeVisitorCounter() {
-    if (counterStarted) return;
-    counterStarted = true;
-
-    const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v15');
+    const hasViewed = localStorage.getItem('v_final_v16');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
-      return Math.max(0, Math.floor(elapsed / 60)); 
+      return Math.max(1, Math.floor(elapsed / 60)); 
     };
 
     try {
-      let url = `https://api.counterapi.dev/v1/hexarion_v15/hits`;
-      if (!hasViewed) {
-        url += `/increment`;
-        localStorage.setItem('v_final_v15', 'true');
-      }
-      const response = await fetch(url);
+      // Use "GET" to see current value, then manually decide to increment
+      const ns = 'hexarion_v16';
+      const getUrl = `https://api.counterapi.dev/v1/${ns}/hits`;
+      
+      const response = await fetch(getUrl);
       const data = await response.json();
-      if (data && data.count) {
-        viewElement.textContent = data.count.toLocaleString();
-      } else {
-        viewElement.textContent = calculateFakeViews().toLocaleString();
+      let currentCount = data.count || 0;
+
+      if (!hasViewed) {
+        // Person is new, send the increment request separately
+        fetch(`${getUrl}/increment`).catch(() => {});
+        currentCount++;
+        localStorage.setItem('v_final_v16', 'true');
       }
+
+      visitorCount.textContent = currentCount.toLocaleString();
     } catch (err) {
-      viewElement.textContent = calculateFakeViews().toLocaleString();
+      visitorCount.textContent = calculateFakeViews().toLocaleString();
     }
   }
 
@@ -135,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeVisitorCounter();
   typeWriterStart();
 
-  const handleStart = async () => {
+  const handleStart = () => {
     if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
     backgroundMusic.muted = false;
@@ -144,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
     typeWriterName();
     typeWriterBio();
-    logVisit(); // Webhook!
+    logVisit();
   };
 
   startScreen.addEventListener('click', handleStart);
