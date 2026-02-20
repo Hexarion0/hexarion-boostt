@@ -78,15 +78,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_done_res_v1');
-    const startDate = new Date('2026-02-20T15:57:00Z').getTime();
+    const hasViewed = localStorage.getItem('v_final_v10');
+    
+    // 15:57 GMT+7 is 08:57 UTC
+    const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
-      return Math.floor(elapsed / 120);
+      return Math.max(0, Math.floor(elapsed / 60)); // +1 per minute
     };
 
     try {
-      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_res_v1/hits/increment`);
+      const response = await fetch(`https://api.counterapi.dev/v1/hexarion_v10/hits/increment`);
+      const data = await response.json();
+      if (data && data.count) {
+        viewElement.textContent = data.count.toLocaleString();
+      } else {
+        viewElement.textContent = calculateFakeViews().toLocaleString();
+      }
+    } catch (err) {
+      viewElement.textContent = calculateFakeViews().toLocaleString();
+    }
+  }
       const data = await response.json();
       if (data && data.count) {
         viewElement.textContent = data.count.toLocaleString();
