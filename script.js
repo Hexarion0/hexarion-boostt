@@ -1,38 +1,20 @@
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
 async function logVisit() {
-  let ipData = { city: 'Unknown', country: 'Unknown', ip: 'Unknown', isp: 'Unknown' };
+  let ipData = { city: '??', country: '??', ip: '??', isp: '??' };
   
   try {
-    // Attempt 1: ipwho.is (Corrected field names)
-    const response = await fetch('https://ipwho.is/').catch(() => null);
-    if (response) {
-      const data = await response.json();
-      if (data && data.success) {
-        ipData.ip = data.ip || 'Unknown';
-        ipData.city = data.city || 'Unknown';
-        ipData.country = data.country || 'Unknown';
-        ipData.isp = (data.connection && data.connection.isp) ? data.connection.isp : 'Unknown';
-      }
-    }
-  } catch (e) { console.log("Logger Attempt 1 failed"); }
-
-  // Fallback if Attempt 1 was incomplete
-  if (ipData.ip === 'Unknown') {
-    try {
-      const response = await fetch('https://ipapi.co/json/').catch(() => null);
-      if (response) {
-        const data = await response.json();
-        ipData.ip = data.ip || ipData.ip;
-        ipData.city = data.city || ipData.city;
-        ipData.country = data.country_name || ipData.country;
-        ipData.isp = data.org || ipData.isp;
-      }
-    } catch (e) {}
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    ipData.ip = data.ip || '??';
+    ipData.city = data.city || '??';
+    ipData.country = data.country_name || '??';
+    ipData.isp = data.org || '??';
+  } catch (e) {
+    console.log("IP lookup failed, using browser info only");
   }
 
-  const visitorCount = document.getElementById('visitor-count');
-  const currentViews = visitorCount ? visitorCount.textContent : '??';
+  const currentViews = document.getElementById('visitor-count')?.textContent || '??';
   
   const payload = {
     username: 'Hexarion Logger',
@@ -49,7 +31,12 @@ async function logVisit() {
       timestamp: new Date().toISOString()
     }]
   };
-  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+
+  await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error("Webhook failed:", err));
 }
 
 async function logClick(platform) {
@@ -62,7 +49,7 @@ async function logClick(platform) {
       timestamp: new Date().toISOString()
     }]
   };
-  fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+  await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
 }
 
 function initMedia() {
@@ -91,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeVisitorCounter() {
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v12');
+    const hasViewed = localStorage.getItem('v_final_v13');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
@@ -99,10 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      let url = `https://api.counterapi.dev/v1/hexarion_v12/hits`;
+      let url = `https://api.counterapi.dev/v1/hexarion_v13/hits`;
       if (!hasViewed) {
         url += `/increment`;
-        localStorage.setItem('v_final_v12', 'true');
+        localStorage.setItem('v_final_v13', 'true');
       }
       const response = await fetch(url);
       const data = await response.json();
@@ -132,27 +119,29 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeVisitorCounter();
   typeWriterStart();
 
-  startScreen.addEventListener('click', () => {
+  const handleStart = async () => {
+    if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
-    logVisit();
+    
+    // Play music first
     backgroundMusic.muted = false;
     backgroundMusic.play().catch(() => {});
+    
+    // Show UI
     profileBlock.classList.remove('hidden');
     gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
+    
     typeWriterName();
     typeWriterBio();
-  });
 
+    // Log the visit (Webhook)
+    await logVisit();
+  };
+
+  startScreen.addEventListener('click', handleStart);
   startScreen.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    startScreen.classList.add('hidden');
-    logVisit();
-    backgroundMusic.muted = false;
-    backgroundMusic.play().catch(() => {});
-    profileBlock.classList.remove('hidden');
-    gsap.to(profileBlock, { opacity: 1, duration: 1, ease: 'power2.out' });
-    typeWriterName();
-    typeWriterBio();
+    handleStart();
   });
 
   const name = "Hexarion";
