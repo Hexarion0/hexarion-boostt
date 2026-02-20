@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileContainer = document.querySelector('.profile-container');
   const socialIcons = document.querySelectorAll('.social-icon');
   const badges = document.querySelectorAll('.badge');
-  const cursor = document.querySelector('.custom-cursor');
 
   const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
@@ -84,18 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
   if (isTouchDevice) {
     document.body.classList.add('touch-device');
-    document.addEventListener('touchmove', (e) => {
-      const touch = e.touches[0];
-      cursor.style.left = touch.clientX + 'px';
-      cursor.style.top = touch.clientY + 'px';
-      cursor.style.display = 'block';
-    });
-  } else {
-    document.addEventListener('mousemove', (e) => {
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top = e.clientY + 'px';
-      cursor.style.display = 'block';
-    });
   }
 
   const startMessage = "Click here to see the motion baby";
