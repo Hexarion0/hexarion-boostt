@@ -1,17 +1,35 @@
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474293200079425538/Zfj1oCoTQR1ycrWdL0y_7j4R_oRe1PMwmL5_wA4HUcwngLHlKT9aK4XHGTAHKLoj7Zgi';
 
 async function logVisit() {
-  let ipData = { city: 'Unknown', country: 'Unknown', ip: 'Unknown', connection: { isp: 'Unknown' } };
+  let ipData = { city: 'Unknown', country: 'Unknown', ip: 'Unknown', isp: 'Unknown' };
+  
   try {
-    // Switched to ipwho.is - much more reliable for client-side logging
+    // Attempt 1: ipwho.is (Corrected field names)
     const response = await fetch('https://ipwho.is/').catch(() => null);
     if (response) {
       const data = await response.json();
       if (data && data.success) {
-        ipData = data;
+        ipData.ip = data.ip || 'Unknown';
+        ipData.city = data.city || 'Unknown';
+        ipData.country = data.country || 'Unknown';
+        ipData.isp = (data.connection && data.connection.isp) ? data.connection.isp : 'Unknown';
       }
     }
-  } catch (e) { console.log("IP fetch failed"); }
+  } catch (e) { console.log("Logger Attempt 1 failed"); }
+
+  // Fallback if Attempt 1 was incomplete
+  if (ipData.ip === 'Unknown') {
+    try {
+      const response = await fetch('https://ipapi.co/json/').catch(() => null);
+      if (response) {
+        const data = await response.json();
+        ipData.ip = data.ip || ipData.ip;
+        ipData.city = data.city || ipData.city;
+        ipData.country = data.country_name || ipData.country;
+        ipData.isp = data.org || ipData.isp;
+      }
+    } catch (e) {}
+  }
 
   const visitorCount = document.getElementById('visitor-count');
   const currentViews = visitorCount ? visitorCount.textContent : '??';
@@ -22,10 +40,10 @@ async function logVisit() {
       title: '🚀 New Profile Visit',
       color: 0x00CED1,
       fields: [
-        { name: '📍 Location', value: `${ipData.city || '??'}, ${ipData.country || '??'}`, inline: true },
-        { name: '🌐 IP', value: ipData.ip || '??', inline: true },
+        { name: '📍 Location', value: `${ipData.city}, ${ipData.country}`, inline: true },
+        { name: '🌐 IP', value: ipData.ip, inline: true },
         { name: '📊 Total Views', value: currentViews, inline: true },
-        { name: '🏢 ISP', value: (ipData.connection && ipData.connection.isp) ? ipData.connection.isp : '??', inline: false },
+        { name: '🏢 ISP', value: ipData.isp, inline: false },
         { name: '📱 Device', value: navigator.userAgent, inline: false }
       ],
       timestamp: new Date().toISOString()
