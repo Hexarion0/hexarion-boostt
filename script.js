@@ -87,20 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileBlock = document.getElementById('profile-block');
   const skillsBlock = document.getElementById('skills-block');
 
+  let counterStarted = false;
   async function initializeVisitorCounter() {
+    if (counterStarted) return;
+    counterStarted = true;
+
     const viewElement = document.getElementById('visitor-count');
-    const hasViewed = localStorage.getItem('v_final_v14');
+    const hasViewed = localStorage.getItem('v_final_v15');
     const startDate = new Date('2026-02-20T08:57:00Z').getTime();
+    
     const calculateFakeViews = () => {
       const elapsed = Math.floor((Date.now() - startDate) / 1000);
       return Math.max(0, Math.floor(elapsed / 60)); 
     };
 
     try {
-      let url = `https://api.counterapi.dev/v1/hexarion_v14/hits`;
+      let url = `https://api.counterapi.dev/v1/hexarion_v15/hits`;
       if (!hasViewed) {
         url += `/increment`;
-        localStorage.setItem('v_final_v14', 'true');
+        localStorage.setItem('v_final_v15', 'true');
       }
       const response = await fetch(url);
       const data = await response.json();
